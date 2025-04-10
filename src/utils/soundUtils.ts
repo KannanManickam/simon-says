@@ -53,6 +53,52 @@ export const playTone = (color: ButtonColor, duration: number = 300) => {
   }
 };
 
+// Play success sound
+export const playSuccessSound = () => {
+  try {
+    const context = initAudio();
+    
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 587.33; // D5
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    
+    gainNode.gain.value = 0;
+    gainNode.gain.setValueAtTime(0, context.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.3, context.currentTime + 0.01);
+    gainNode.gain.linearRampToValueAtTime(0, context.currentTime + 0.3);
+    
+    oscillator.start(context.currentTime);
+    oscillator.stop(context.currentTime + 0.3);
+    
+    setTimeout(() => {
+      const oscillator2 = context.createOscillator();
+      const gainNode2 = context.createGain();
+      
+      oscillator2.type = 'sine';
+      oscillator2.frequency.value = 783.99; // G5
+      
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(context.destination);
+      
+      gainNode2.gain.value = 0;
+      gainNode2.gain.setValueAtTime(0, context.currentTime);
+      gainNode2.gain.linearRampToValueAtTime(0.3, context.currentTime + 0.01);
+      gainNode2.gain.linearRampToValueAtTime(0, context.currentTime + 0.3);
+      
+      oscillator2.start(context.currentTime);
+      oscillator2.stop(context.currentTime + 0.3);
+    }, 150);
+    
+  } catch (error) {
+    console.error('Error playing success sound:', error);
+  }
+};
+
 // Play an error sound
 export const playErrorSound = () => {
   try {

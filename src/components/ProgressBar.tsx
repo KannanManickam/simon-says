@@ -13,11 +13,19 @@ const ProgressBar: React.FC = () => {
     return Math.round((userSequence.length / sequence.length) * 100);
   };
   
+  // Get progress color based on completion
+  const getProgressColor = () => {
+    const progress = calculateProgress();
+    if (progress >= 75) return 'bg-green-500';
+    if (progress >= 40) return 'bg-blue-500';
+    return 'bg-purple-500';
+  };
+  
   return (
     <div className="w-full max-w-md mb-4">
       <Progress 
         value={calculateProgress()} 
-        className="h-2 bg-slate-600"
+        className={`h-2 bg-slate-600 transition-all ${getProgressColor()}`}
       />
       <div className="flex justify-between text-xs text-white mt-1 opacity-70">
         <span>0%</span>

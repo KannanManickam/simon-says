@@ -1,11 +1,47 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useToast } from '@/components/ui/use-toast';
 
 // Define the available colors
 export type ButtonColor = 'red' | 'blue' | 'green' | 'yellow';
 
 // Game states
 export type GameState = 'start' | 'sequence' | 'userInput' | 'gameOver';
+
+// Theme IDs
+export type ThemeId = 'classic' | 'pastel' | 'neon' | 'monochrome';
+
+// Theme color mappings
+export const themeColors = {
+  classic: {
+    red: '#FF4136',
+    blue: '#0074D9',
+    green: '#2ECC40',
+    yellow: '#FFDC00',
+    background: '#333333',
+  },
+  pastel: {
+    red: '#FFB3B3',
+    blue: '#B3D9FF',
+    green: '#B3FFB3',
+    yellow: '#FFFFB3',
+    background: '#555555',
+  },
+  neon: {
+    red: '#FF00FF',
+    blue: '#00FFFF',
+    green: '#00FF00',
+    yellow: '#FFFF00',
+    background: '#222222',
+  },
+  monochrome: {
+    red: '#555555',
+    blue: '#777777',
+    green: '#999999',
+    yellow: '#BBBBBB',
+    background: '#333333',
+  },
+};
 
 interface GameContextType {
   gameState: GameState;
@@ -16,9 +52,18 @@ interface GameContextType {
   activeButton: ButtonColor | null;
   timeRemaining: number;
   maxTimePerRound: number;
+  difficulty: number;
+  soundEnabled: boolean;
+  currentTheme: ThemeId;
   startGame: () => void;
   handleButtonPress: (color: ButtonColor) => void;
   isButtonActive: (color: ButtonColor) => boolean;
+  setDifficulty: (level: number) => void;
+  toggleSound: () => void;
+  changeTheme: (themeId: ThemeId) => void;
+  getButtonColor: (color: ButtonColor) => string;
+  getBackgroundColor: () => string;
+  restartGame: () => void;
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
@@ -45,24 +90,81 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [activeButton, setActiveButton] = useState<ButtonColor | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [maxTimePerRound, setMaxTimePerRound] = useState<number>(5);
+  const [difficulty, setDifficulty] = useState<number>(2); // 1=Easy, 2=Medium, 3=Hard
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
 
-  // Load high score from localStorage
+  const { toast } = useToast();
+
+  // Load settings from localStorage
   useEffect(() => {
     const savedHighScore = localStorage.getItem('simonHighScore');
+    const savedDifficulty = localStorage.getItem('simonDifficulty');
+    const savedSound = localStorage.getItem('simonSound');
+    const savedTheme = localStorage.getItem('simonTheme');
+
     if (savedHighScore) {
       setHighScore(parseInt(savedHighScore, 10));
     }
+    if (savedDifficulty) {
+      setDifficulty(parseInt(savedDifficulty, 10));
+    }
+    if (savedSound) {
+      setSoundEnabled(savedSound === 'true');
+    }
+    if (savedTheme && ['classic', 'pastel', 'neon', 'monochrome'].includes(savedTheme)) {
+      setCurrentTheme(savedTheme as ThemeId);
+    }
   }, []);
 
-  // Save high score to localStorage when it changes
+  // Save settings to localStorage when they change
   useEffect(() => {
     localStorage.setItem('simonHighScore', highScore.toString());
   }, [highScore]);
+
+  useEffect(() => {
+    localStorage.setItem('simonDifficulty', difficulty.toString());
+  }, [difficulty]);
+
+  useEffect(() => {
+    localStorage.setItem('simonSound', soundEnabled.toString());
+  }, [soundEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('simonTheme', currentTheme);
+  }, [currentTheme]);
 
   // Generate a random button color
   const getRandomButton = (): ButtonColor => {
     const buttons: ButtonColor[] = ['red', 'blue', 'green', 'yellow'];
     return buttons[Math.floor(Math.random() * buttons.length)];
+  };
+
+  // Calculate timing parameters based on difficulty
+  const getSequenceDelay = () => {
+    switch (difficulty) {
+      case 1: return 800; // Easy: Slower
+      case 3: return 400; // Hard: Faster
+      default: return 600; // Medium: Normal
+    }
+  };
+
+  const getSequenceDisplayTime = () => {
+    switch (difficulty) {
+      case 1: return 800; // Easy: Longer display
+      case 3: return 400; // Hard: Brief display
+      default: return 600; // Medium: Normal
+    }
+  };
+
+  const getTimeLimit = (seqLength: number) => {
+    const baseTime = difficulty === 1 
+      ? 8 // Easy: More time
+      : difficulty === 3 
+        ? 4 // Hard: Less time
+        : 6; // Medium: Standard time
+    
+    return Math.max(4, Math.min(10, baseTime + (seqLength * 0.5)));
   };
 
   // Timer for user input
@@ -90,6 +192,41 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     };
   }, [gameState, timeRemaining, score, highScore]);
 
+  // Function to change difficulty
+  const changeDifficulty = (level: number) => {
+    if (level >= 1 && level <= 3) {
+      setDifficulty(level);
+      toast({
+        title: `Difficulty: ${level === 1 ? 'Easy' : level === 2 ? 'Medium' : 'Hard'}`,
+        description: "Game difficulty settings updated",
+      });
+    }
+  };
+
+  // Function to toggle sound
+  const toggleSound = () => {
+    setSoundEnabled(prev => !prev);
+  };
+  
+  // Function to change theme
+  const changeTheme = (themeId: ThemeId) => {
+    setCurrentTheme(themeId);
+    toast({
+      title: "Theme Changed",
+      description: `Theme set to ${themeId.charAt(0).toUpperCase() + themeId.slice(1)}`,
+    });
+  };
+
+  // Get button color based on current theme
+  const getButtonColor = (color: ButtonColor): string => {
+    return themeColors[currentTheme][color];
+  };
+  
+  // Get background color based on current theme
+  const getBackgroundColor = (): string => {
+    return themeColors[currentTheme].background;
+  };
+
   // Start a new game
   const startGame = () => {
     // Reset game state
@@ -97,8 +234,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     setSequence([getRandomButton()]);
     setUserSequence([]);
     setCurrentStep(0);
-    setTimeRemaining(5); // Initial time for first level
+    const initialTime = getTimeLimit(1);
+    setTimeRemaining(initialTime);
+    setMaxTimePerRound(initialTime);
     setGameState('sequence');
+  };
+  
+  // Restart game after game over
+  const restartGame = () => {
+    startGame();
   };
 
   // Play the sequence for the user to watch
@@ -106,6 +250,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     if (gameState !== 'sequence') return;
 
     let step = 0;
+    const sequenceDelay = getSequenceDelay();
+    const displayTime = getSequenceDisplayTime();
+    
     const playSequence = () => {
       // Play the current step in the sequence
       setActiveButton(sequence[step]);
@@ -117,22 +264,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         
         if (step < sequence.length) {
           // Continue to the next step after a gap
-          setTimeout(playSequence, 300);
+          setTimeout(playSequence, sequenceDelay - displayTime);
         } else {
           // Sequence is complete, user's turn
-          // Set time limit based on sequence length (harder as game progresses)
-          setTimeRemaining(Math.max(5, Math.min(10, sequence.length * 1.5)));
-          setMaxTimePerRound(Math.max(5, Math.min(10, sequence.length * 1.5)));
+          // Set time limit based on sequence length and difficulty
+          const timeLimit = getTimeLimit(sequence.length);
+          setTimeRemaining(timeLimit);
+          setMaxTimePerRound(timeLimit);
           setGameState('userInput');
         }
-      }, 600);
+      }, displayTime);
     };
 
     // Start playing the sequence after a short delay
     const timer = setTimeout(playSequence, 1000);
     
     return () => clearTimeout(timer);
-  }, [gameState, sequence]);
+  }, [gameState, sequence, difficulty]);
 
   // Handle user button presses
   const handleButtonPress = (color: ButtonColor) => {
@@ -152,6 +300,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       setGameState('gameOver');
       if (score > highScore) {
         setHighScore(score);
+        toast({
+          title: "New High Score!",
+          description: `You've achieved a new personal best of ${score}!`,
+        });
       }
       return;
     }
@@ -159,7 +311,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     // Check if the user completed the current sequence
     if (newUserSequence.length === sequence.length) {
       // User completed the sequence correctly
-      setScore(score + 1);
+      const newScore = score + 1;
+      setScore(newScore);
       setUserSequence([]);
       
       // Add a new random button to the sequence and play it
@@ -187,9 +340,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     activeButton,
     timeRemaining,
     maxTimePerRound,
+    difficulty,
+    soundEnabled,
+    currentTheme,
     startGame,
     handleButtonPress,
     isButtonActive,
+    setDifficulty: changeDifficulty,
+    toggleSound,
+    changeTheme,
+    getButtonColor,
+    getBackgroundColor,
+    restartGame,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

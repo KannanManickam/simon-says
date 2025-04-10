@@ -9,36 +9,22 @@ interface GameButtonProps {
 }
 
 const GameButton: React.FC<GameButtonProps> = ({ color }) => {
-  const { handleButtonPress, isButtonActive, gameState } = useGame();
+  const { 
+    handleButtonPress, 
+    isButtonActive, 
+    gameState, 
+    soundEnabled,
+    getButtonColor
+  } = useGame();
   
   const isActive = isButtonActive(color);
   
   // Play sound when button is active
   useEffect(() => {
-    if (isActive) {
+    if (isActive && soundEnabled) {
       playTone(color);
     }
-  }, [isActive, color]);
-  
-  // Colors and styles for each button
-  const buttonColors = {
-    red: {
-      base: 'bg-simon-red/70 hover:bg-simon-red/80',
-      active: 'bg-simon-red',
-    },
-    blue: {
-      base: 'bg-simon-blue/70 hover:bg-simon-blue/80',
-      active: 'bg-simon-blue',
-    },
-    green: {
-      base: 'bg-simon-green/70 hover:bg-simon-green/80',
-      active: 'bg-simon-green',
-    },
-    yellow: {
-      base: 'bg-simon-yellow/70 hover:bg-simon-yellow/80',
-      active: 'bg-simon-yellow',
-    },
-  };
+  }, [isActive, color, soundEnabled]);
   
   // Position classes for each button
   const positionClasses = {
@@ -48,17 +34,22 @@ const GameButton: React.FC<GameButtonProps> = ({ color }) => {
     yellow: 'rounded-br-full',
   };
   
+  // Get button color from theme
+  const buttonColor = getButtonColor(color);
+  
   return (
     <button
       className={cn(
         'w-full h-full transition-all duration-200 shadow-lg',
-        buttonColors[color].base,
         positionClasses[color],
-        isActive && buttonColors[color].active,
         isActive && 'animate-button-flash shadow-xl',
         gameState === 'sequence' && 'cursor-not-allowed',
         gameState === 'userInput' && 'cursor-pointer'
       )}
+      style={{
+        backgroundColor: isActive ? buttonColor : `${buttonColor}85`, // Using hex alpha for inactive state
+        boxShadow: isActive ? `0 0 20px ${buttonColor}` : undefined,
+      }}
       onClick={() => handleButtonPress(color)}
       disabled={gameState !== 'userInput'}
       aria-label={`${color} button`}

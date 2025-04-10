@@ -1,20 +1,44 @@
 
 import React, { useEffect } from 'react';
-import { GameProvider } from '@/context/GameContext';
+import { GameProvider, useGame } from '@/context/GameContext';
 import GameBoard from '@/components/GameBoard';
-import { playErrorSound } from '@/utils/soundUtils';
-import { useGame } from '@/context/GameContext';
+import { playErrorSound, playSuccessSound } from '@/utils/soundUtils';
+import { initAudio } from '@/utils/soundUtils';
 
 // Game container with audio initialization
 const GameContainer = () => {
-  const { gameState } = useGame();
+  const { gameState, soundEnabled, score } = useGame();
   
-  // Play error sound on game over
+  // Initialize audio on first interaction
   useEffect(() => {
+    const handleUserInteraction = () => {
+      initAudio();
+      // Clean up event listener after initialization
+      document.removeEventListener('click', handleUserInteraction);
+    };
+    
+    document.addEventListener('click', handleUserInteraction);
+    
+    return () => {
+      document.removeEventListener('click', handleUserInteraction);
+    };
+  }, []);
+  
+  // Play sound effects based on game state
+  useEffect(() => {
+    if (!soundEnabled) return;
+    
     if (gameState === 'gameOver') {
       playErrorSound();
     }
-  }, [gameState]);
+  }, [gameState, soundEnabled]);
+  
+  // Play success sound on milestone scores
+  useEffect(() => {
+    if (soundEnabled && score > 0 && score % 5 === 0 && gameState === 'userInput') {
+      playSuccessSound();
+    }
+  }, [score, gameState, soundEnabled]);
   
   return <GameBoard />;
 };
