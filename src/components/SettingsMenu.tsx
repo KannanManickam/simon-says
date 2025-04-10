@@ -14,6 +14,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThemeId } from '@/context/GameContext';
 
 const SettingsMenu: React.FC = () => {
   const { 
@@ -26,10 +27,10 @@ const SettingsMenu: React.FC = () => {
   } = useGame();
   
   const themes = [
-    { id: 'classic', name: 'Classic', colors: ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00'] },
-    { id: 'pastel', name: 'Pastel', colors: ['#FFB3B3', '#B3D9FF', '#B3FFB3', '#FFFFB3'] },
-    { id: 'neon', name: 'Neon', colors: ['#FF00FF', '#00FFFF', '#00FF00', '#FFFF00'] },
-    { id: 'monochrome', name: 'Monochrome', colors: ['#555555', '#777777', '#999999', '#BBBBBB'] },
+    { id: 'classic' as ThemeId, name: 'Classic', colors: ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00'] },
+    { id: 'pastel' as ThemeId, name: 'Pastel', colors: ['#FFB3B3', '#B3D9FF', '#B3FFB3', '#FFFFB3'] },
+    { id: 'neon' as ThemeId, name: 'Neon', colors: ['#FF00FF', '#00FFFF', '#00FF00', '#FFFF00'] },
+    { id: 'monochrome' as ThemeId, name: 'Monochrome', colors: ['#555555', '#777777', '#999999', '#BBBBBB'] },
   ];
   
   return (
