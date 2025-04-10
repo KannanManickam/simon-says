@@ -1,6 +1,8 @@
 
 import React from 'react';
 import GameButton from './GameButton';
+import ProgressBar from './ProgressBar';
+import Timer from './Timer';
 import { useGame } from '@/context/GameContext';
 
 const GameBoard: React.FC = () => {
@@ -57,7 +59,11 @@ const GameBoard: React.FC = () => {
         )}
         
         {gameState === 'userInput' && (
-          <p className="text-white text-xl mb-4">Your turn!</p>
+          <div className="flex flex-col items-center">
+            <p className="text-white text-xl mb-2">Your turn!</p>
+            <Timer />
+            <ProgressBar />
+          </div>
         )}
       </div>
       

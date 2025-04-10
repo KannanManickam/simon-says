@@ -14,6 +14,8 @@ interface GameContextType {
   sequence: ButtonColor[];
   userSequence: ButtonColor[];
   activeButton: ButtonColor | null;
+  timeRemaining: number;
+  maxTimePerRound: number;
   startGame: () => void;
   handleButtonPress: (color: ButtonColor) => void;
   isButtonActive: (color: ButtonColor) => boolean;
@@ -41,6 +43,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [userSequence, setUserSequence] = useState<ButtonColor[]>([]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [activeButton, setActiveButton] = useState<ButtonColor | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [maxTimePerRound, setMaxTimePerRound] = useState<number>(5);
 
   // Load high score from localStorage
   useEffect(() => {
@@ -61,6 +65,31 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     return buttons[Math.floor(Math.random() * buttons.length)];
   };
 
+  // Timer for user input
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (gameState === 'userInput' && timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining(prev => {
+          if (prev <= 1) {
+            clearInterval(timer as NodeJS.Timeout);
+            setGameState('gameOver');
+            if (score > highScore) {
+              setHighScore(score);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [gameState, timeRemaining, score, highScore]);
+
   // Start a new game
   const startGame = () => {
     // Reset game state
@@ -68,6 +97,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     setSequence([getRandomButton()]);
     setUserSequence([]);
     setCurrentStep(0);
+    setTimeRemaining(5); // Initial time for first level
     setGameState('sequence');
   };
 
@@ -90,6 +120,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
           setTimeout(playSequence, 300);
         } else {
           // Sequence is complete, user's turn
+          // Set time limit based on sequence length (harder as game progresses)
+          setTimeRemaining(Math.max(5, Math.min(10, sequence.length * 1.5)));
+          setMaxTimePerRound(Math.max(5, Math.min(10, sequence.length * 1.5)));
           setGameState('userInput');
         }
       }, 600);
@@ -152,6 +185,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     sequence,
     userSequence,
     activeButton,
+    timeRemaining,
+    maxTimePerRound,
     startGame,
     handleButtonPress,
     isButtonActive,
