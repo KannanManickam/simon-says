@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import GameButton from './GameButton';
 import ProgressBar from './ProgressBar';
 import Timer from './Timer';
@@ -22,6 +22,7 @@ const GameBoard: React.FC = () => {
   } = useGame();
   
   const { toast } = useToast();
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   // Show toast when player achieves a milestone score
   useEffect(() => {
@@ -33,22 +34,39 @@ const GameBoard: React.FC = () => {
     }
   }, [score, gameState, toast]);
   
+  // Clean up speech synthesis when component unmounts
+  useEffect(() => {
+    return () => {
+      if (speechRef.current) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+  
   // Voice instruction effect
   useEffect(() => {
     if (!voiceInstructionsEnabled || !activeButton || gameState !== 'sequence') return;
     
     // Create a speech synthesis utterance
+    if (speechRef.current) {
+      window.speechSynthesis.cancel(); // Cancel any ongoing speech
+    }
+    
     const utterance = new SpeechSynthesisUtterance();
     utterance.text = `Simon says ${activeButton}`;
-    utterance.rate = 1.0;
+    utterance.rate = 0.9; // Slightly slower rate for better clarity
     utterance.pitch = 1.0;
-    utterance.volume = 0.8;
+    utterance.volume = 1.0; // Maximum volume
+    speechRef.current = utterance;
     
-    // Speak the color
-    window.speechSynthesis.speak(utterance);
+    // Add a small delay to ensure the speech synthesis is ready
+    const timer = setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 100);
     
     return () => {
-      window.speechSynthesis.cancel(); // Cancel any ongoing speech when cleaning up
+      clearTimeout(timer);
+      // Don't cancel immediately on cleanup to allow speech to complete
     };
   }, [activeButton, gameState, voiceInstructionsEnabled]);
   

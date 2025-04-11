@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ButtonColor, useGame } from '@/context/GameContext';
@@ -22,10 +21,10 @@ const GameButton: React.FC<GameButtonProps> = ({ color }) => {
   
   // Play sound when button is active (only for game sounds, not voice instructions)
   useEffect(() => {
-    if (isActive && soundEnabled && !voiceInstructionsEnabled) {
+    if (isActive && soundEnabled && (!voiceInstructionsEnabled || gameState !== 'sequence')) {
       playTone(color);
     }
-  }, [isActive, color, soundEnabled, voiceInstructionsEnabled]);
+  }, [isActive, color, soundEnabled, voiceInstructionsEnabled, gameState]);
   
   // Position classes for each button
   const positionClasses = {

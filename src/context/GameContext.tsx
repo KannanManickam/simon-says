@@ -152,19 +152,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
 
   // Calculate timing parameters based on difficulty
   const getSequenceDelay = () => {
+    let baseDelay;
     switch (difficulty) {
-      case 1: return 800; // Easy: Slower
-      case 3: return 400; // Hard: Faster
-      default: return 600; // Medium: Normal
+      case 1: baseDelay = 800; break; // Easy: Slower
+      case 3: baseDelay = 400; break; // Hard: Faster
+      default: baseDelay = 600; break; // Medium: Normal
     }
+    
+    // Add extra time if voice instructions are enabled
+    return voiceInstructionsEnabled ? baseDelay + 800 : baseDelay;
   };
 
   const getSequenceDisplayTime = () => {
+    let baseTime;
     switch (difficulty) {
-      case 1: return 800; // Easy: Longer display
-      case 3: return 400; // Hard: Brief display
-      default: return 600; // Medium: Normal
+      case 1: baseTime = 800; break; // Easy: Longer display
+      case 3: baseTime = 400; break; // Hard: Brief display
+      default: baseTime = 600; break; // Medium: Normal
     }
+    
+    // Add extra time if voice instructions are enabled
+    return voiceInstructionsEnabled ? baseTime + 800 : baseTime;
   };
 
   const getTimeLimit = (seqLength: number) => {
@@ -279,7 +287,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         
         if (step < sequence.length) {
           // Continue to the next step after a gap
-          setTimeout(playSequence, sequenceDelay - displayTime);
+          // Add extra time between steps if voice is enabled
+          const pauseTime = voiceInstructionsEnabled ? sequenceDelay + 200 : sequenceDelay - displayTime;
+          setTimeout(playSequence, pauseTime);
         } else {
           // Sequence is complete, user's turn
           // Set time limit based on sequence length and difficulty
@@ -292,10 +302,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     };
 
     // Start playing the sequence after a short delay
-    const timer = setTimeout(playSequence, 1000);
+    // Add extra time before starting if voice is enabled
+    const initialDelay = voiceInstructionsEnabled ? 1500 : 1000;
+    const timer = setTimeout(playSequence, initialDelay);
     
     return () => clearTimeout(timer);
-  }, [gameState, sequence, difficulty]);
+  }, [gameState, sequence, difficulty, voiceInstructionsEnabled]);
 
   // Handle user button presses
   const handleButtonPress = (color: ButtonColor) => {
