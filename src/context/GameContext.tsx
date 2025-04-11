@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -57,6 +56,7 @@ interface GameContextType {
   voiceInstructionsEnabled: boolean;
   currentTheme: ThemeId;
   currentRound: number;
+  currentStep: number; // Add the missing property
   startGame: () => void;
   handleButtonPress: (color: ButtonColor) => void;
   isButtonActive: (color: ButtonColor) => boolean;
@@ -377,6 +377,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     voiceInstructionsEnabled,
     currentTheme,
     currentRound,
+    currentStep, // Add this to the value object
     startGame,
     handleButtonPress,
     isButtonActive,
