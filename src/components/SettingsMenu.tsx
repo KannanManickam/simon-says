@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Settings, Volume2, VolumeX, Palette } from 'lucide-react';
+import { Settings, Volume2, VolumeX, Palette, Mic, MicOff } from 'lucide-react';
 import { useGame } from '@/context/GameContext';
 import {
   Dialog,
@@ -22,6 +22,8 @@ const SettingsMenu: React.FC = () => {
     setDifficulty, 
     soundEnabled,
     toggleSound,
+    voiceInstructionsEnabled,
+    toggleVoiceInstructions,
     currentTheme,
     changeTheme
   } = useGame();
@@ -104,8 +106,24 @@ const SettingsMenu: React.FC = () => {
                 />
               </div>
               
-              <p className="text-sm opacity-80">
-                Toggle sound effects for button presses and game events
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-2">
+                  {voiceInstructionsEnabled ? (
+                    <Mic className="h-5 w-5 text-slate-200" />
+                  ) : (
+                    <MicOff className="h-5 w-5 text-slate-400" />
+                  )}
+                  <Label htmlFor="voice-toggle" className="text-lg">Voice Instructions</Label>
+                </div>
+                <Switch 
+                  id="voice-toggle" 
+                  checked={voiceInstructionsEnabled}
+                  onCheckedChange={toggleVoiceInstructions}
+                />
+              </div>
+              
+              <p className="text-sm opacity-80 mt-2">
+                Enable voice that announces "Simon says" and the color names
               </p>
             </div>
           </TabsContent>

@@ -16,7 +16,9 @@ const GameBoard: React.FC = () => {
     highScore, 
     startGame,
     restartGame,
-    getBackgroundColor 
+    getBackgroundColor,
+    activeButton,
+    voiceInstructionsEnabled
   } = useGame();
   
   const { toast } = useToast();
@@ -30,6 +32,25 @@ const GameBoard: React.FC = () => {
       });
     }
   }, [score, gameState, toast]);
+  
+  // Voice instruction effect
+  useEffect(() => {
+    if (!voiceInstructionsEnabled || !activeButton || gameState !== 'sequence') return;
+    
+    // Create a speech synthesis utterance
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.text = `Simon says ${activeButton}`;
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 0.8;
+    
+    // Speak the color
+    window.speechSynthesis.speak(utterance);
+    
+    return () => {
+      window.speechSynthesis.cancel(); // Cancel any ongoing speech when cleaning up
+    };
+  }, [activeButton, gameState, voiceInstructionsEnabled]);
   
   // Get dynamic background color from theme
   const backgroundColor = getBackgroundColor();
@@ -65,7 +86,9 @@ const GameBoard: React.FC = () => {
         {gameState === 'start' && (
           <div className="mb-8">
             <p className="text-white text-lg mb-6">
-              Watch the sequence, then repeat it by pressing the buttons in the same order.
+              {voiceInstructionsEnabled 
+                ? "Listen carefully to 'Simon Says' commands, then repeat the sequence."
+                : "Watch the sequence, then repeat it by pressing the buttons in the same order."}
             </p>
             <Button
               onClick={startGame}
@@ -90,7 +113,11 @@ const GameBoard: React.FC = () => {
         )}
         
         {gameState === 'sequence' && (
-          <p className="text-white text-xl mb-4 animate-pulse">Watch carefully...</p>
+          <p className="text-white text-xl mb-4 animate-pulse">
+            {voiceInstructionsEnabled 
+              ? "Listen carefully..." 
+              : "Watch carefully..."}
+          </p>
         )}
         
         {gameState === 'userInput' && (

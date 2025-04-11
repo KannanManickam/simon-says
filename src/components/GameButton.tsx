@@ -14,17 +14,18 @@ const GameButton: React.FC<GameButtonProps> = ({ color }) => {
     isButtonActive, 
     gameState, 
     soundEnabled,
+    voiceInstructionsEnabled,
     getButtonColor
   } = useGame();
   
   const isActive = isButtonActive(color);
   
-  // Play sound when button is active
+  // Play sound when button is active (only for game sounds, not voice instructions)
   useEffect(() => {
-    if (isActive && soundEnabled) {
+    if (isActive && soundEnabled && !voiceInstructionsEnabled) {
       playTone(color);
     }
-  }, [isActive, color, soundEnabled]);
+  }, [isActive, color, soundEnabled, voiceInstructionsEnabled]);
   
   // Position classes for each button
   const positionClasses = {

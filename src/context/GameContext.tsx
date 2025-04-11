@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -54,12 +53,14 @@ interface GameContextType {
   maxTimePerRound: number;
   difficulty: number;
   soundEnabled: boolean;
+  voiceInstructionsEnabled: boolean;
   currentTheme: ThemeId;
   startGame: () => void;
   handleButtonPress: (color: ButtonColor) => void;
   isButtonActive: (color: ButtonColor) => boolean;
   setDifficulty: (level: number) => void;
   toggleSound: () => void;
+  toggleVoiceInstructions: () => void;
   changeTheme: (themeId: ThemeId) => void;
   getButtonColor: (color: ButtonColor) => string;
   getBackgroundColor: () => string;
@@ -92,6 +93,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [maxTimePerRound, setMaxTimePerRound] = useState<number>(5);
   const [difficulty, setDifficulty] = useState<number>(2); // 1=Easy, 2=Medium, 3=Hard
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [voiceInstructionsEnabled, setSpeechEnabled] = useState<boolean>(true);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
 
   const { toast } = useToast();
@@ -101,6 +103,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     const savedHighScore = localStorage.getItem('simonHighScore');
     const savedDifficulty = localStorage.getItem('simonDifficulty');
     const savedSound = localStorage.getItem('simonSound');
+    const savedVoiceInstructions = localStorage.getItem('simonVoiceInstructions');
     const savedTheme = localStorage.getItem('simonTheme');
 
     if (savedHighScore) {
@@ -111,6 +114,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
     if (savedSound) {
       setSoundEnabled(savedSound === 'true');
+    }
+    if (savedVoiceInstructions) {
+      setSpeechEnabled(savedVoiceInstructions === 'true');
     }
     if (savedTheme && ['classic', 'pastel', 'neon', 'monochrome'].includes(savedTheme)) {
       setCurrentTheme(savedTheme as ThemeId);
@@ -129,6 +135,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('simonSound', soundEnabled.toString());
   }, [soundEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('simonVoiceInstructions', voiceInstructionsEnabled.toString());
+  }, [voiceInstructionsEnabled]);
 
   useEffect(() => {
     localStorage.setItem('simonTheme', currentTheme);
@@ -206,6 +216,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Function to toggle sound
   const toggleSound = () => {
     setSoundEnabled(prev => !prev);
+  };
+  
+  // Function to toggle voice instructions
+  const toggleVoiceInstructions = () => {
+    setSpeechEnabled(prev => !prev);
   };
   
   // Function to change theme
@@ -342,12 +357,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     maxTimePerRound,
     difficulty,
     soundEnabled,
+    voiceInstructionsEnabled,
     currentTheme,
     startGame,
     handleButtonPress,
     isButtonActive,
     setDifficulty: changeDifficulty,
     toggleSound,
+    toggleVoiceInstructions,
     changeTheme,
     getButtonColor,
     getBackgroundColor,
