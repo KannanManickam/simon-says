@@ -1,13 +1,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import GameButton from './GameButton';
-import ProgressBar from './ProgressBar';
 import Timer from './Timer';
 import SettingsMenu from './SettingsMenu';
 import { useGame } from '@/context/GameContext';
 import { Sparkles, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
 
 const GameBoard: React.FC = () => {
   const { 
@@ -20,12 +18,12 @@ const GameBoard: React.FC = () => {
     activeButton,
     voiceInstructionsEnabled,
     sequence,
-    currentRound
+    currentRound,
+    currentStep,
   } = useGame();
   
-  const { toast } = useToast();
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const [roundAnnounced, setRoundAnnounced] = useState(false);
+  const [simonSaysAnnounced, setSimonSaysAnnounced] = useState(false);
   
   // Clean up speech synthesis when component unmounts
   useEffect(() => {
@@ -36,18 +34,16 @@ const GameBoard: React.FC = () => {
     };
   }, []);
   
-  // Reset round announced flag when game state changes
+  // Reset simon says announced flag when game state changes
   useEffect(() => {
-    if (gameState === 'sequence' && !roundAnnounced) {
-      setRoundAnnounced(true);
-    } else if (gameState !== 'sequence') {
-      setRoundAnnounced(false);
+    if (gameState === 'sequence' && currentStep === 0) {
+      setSimonSaysAnnounced(false);
     }
-  }, [gameState, roundAnnounced]);
+  }, [gameState, currentStep]);
   
   // Voice instruction effect
   useEffect(() => {
-    if (!voiceInstructionsEnabled || !activeButton || gameState !== 'sequence') return;
+    if (!voiceInstructionsEnabled || gameState !== 'sequence') return;
     
     // Create a speech synthesis utterance
     if (speechRef.current) {
@@ -56,12 +52,14 @@ const GameBoard: React.FC = () => {
     
     const utterance = new SpeechSynthesisUtterance();
     
-    // Say "Simon says" at the start of a new round
-    if (!roundAnnounced && sequence.length > 0) {
-      utterance.text = `Simon says ${activeButton}`;
-      setRoundAnnounced(true);
-    } else {
+    // Say "Simon says" at the start of each round, but only once
+    if (!simonSaysAnnounced && currentStep === 0) {
+      utterance.text = `Simon says`;
+      setSimonSaysAnnounced(true);
+    } else if (activeButton) {
       utterance.text = activeButton;
+    } else {
+      return; // No text to speak
     }
     
     utterance.rate = 0.9; // Slightly slower rate for better clarity
@@ -76,9 +74,8 @@ const GameBoard: React.FC = () => {
     
     return () => {
       clearTimeout(timer);
-      // Don't cancel immediately on cleanup to allow speech to complete
     };
-  }, [activeButton, gameState, voiceInstructionsEnabled, sequence, roundAnnounced]);
+  }, [activeButton, gameState, voiceInstructionsEnabled, currentStep, simonSaysAnnounced]);
   
   // Get dynamic background color from theme
   const backgroundColor = getBackgroundColor();
@@ -165,7 +162,6 @@ const GameBoard: React.FC = () => {
       {gameState === 'userInput' && (
         <div className="fixed bottom-8 left-0 right-0 flex flex-col items-center mt-8">
           <Timer />
-          <ProgressBar />
         </div>
       )}
     </div>
