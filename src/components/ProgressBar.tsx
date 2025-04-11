@@ -22,7 +22,7 @@ const ProgressBar: React.FC = () => {
   };
   
   return (
-    <div className="w-full max-w-md mb-4">
+    <div className="w-full max-w-md px-4">
       <Progress 
         value={calculateProgress()} 
         className={`h-2 bg-slate-600 transition-all ${getProgressColor()}`}

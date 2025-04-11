@@ -21,7 +21,7 @@ const Timer: React.FC = () => {
   };
   
   return (
-    <div className="flex flex-col items-center mb-4">
+    <div className="flex flex-col items-center mb-2">
       <div className="flex items-center gap-2 font-mono">
         <Clock className={cn("w-5 h-5", getColorClass())} />
         <span className={cn("font-bold text-xl", getColorClass())}>
@@ -30,7 +30,7 @@ const Timer: React.FC = () => {
       </div>
       
       {/* Visual timer bar */}
-      <div className="w-32 h-2 bg-gray-700 rounded-full mt-1 overflow-hidden">
+      <div className="w-32 h-2 bg-gray-700 rounded-full mt-1 mb-3 overflow-hidden">
         <div 
           className={cn(
             "h-full transition-all duration-1000 ease-linear rounded-full",

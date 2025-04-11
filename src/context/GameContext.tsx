@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -55,6 +56,7 @@ interface GameContextType {
   soundEnabled: boolean;
   voiceInstructionsEnabled: boolean;
   currentTheme: ThemeId;
+  currentRound: number;
   startGame: () => void;
   handleButtonPress: (color: ButtonColor) => void;
   isButtonActive: (color: ButtonColor) => boolean;
@@ -95,6 +97,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [voiceInstructionsEnabled, setSpeechEnabled] = useState<boolean>(true);
   const [currentTheme, setCurrentTheme] = useState<ThemeId>('classic');
+  const [currentRound, setCurrentRound] = useState<number>(0);
 
   const { toast } = useToast();
 
@@ -257,6 +260,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     setSequence([getRandomButton()]);
     setUserSequence([]);
     setCurrentStep(0);
+    setCurrentRound(1);
     const initialTime = getTimeLimit(1);
     setTimeRemaining(initialTime);
     setMaxTimePerRound(initialTime);
@@ -341,6 +345,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       const newScore = score + 1;
       setScore(newScore);
       setUserSequence([]);
+      setCurrentRound(currentRound + 1);
       
       // Add a new random button to the sequence and play it
       setTimeout(() => {
@@ -371,6 +376,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     soundEnabled,
     voiceInstructionsEnabled,
     currentTheme,
+    currentRound,
     startGame,
     handleButtonPress,
     isButtonActive,

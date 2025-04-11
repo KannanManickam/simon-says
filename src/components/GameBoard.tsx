@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import GameButton from './GameButton';
 import ProgressBar from './ProgressBar';
 import Timer from './Timer';
@@ -18,21 +19,13 @@ const GameBoard: React.FC = () => {
     getBackgroundColor,
     activeButton,
     voiceInstructionsEnabled,
-    sequence
+    sequence,
+    currentRound
   } = useGame();
   
   const { toast } = useToast();
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
-  
-  // Show toast when player achieves a milestone score
-  useEffect(() => {
-    if (score > 0 && score % 5 === 0 && gameState === 'userInput') {
-      toast({
-        title: "Level Up!",
-        description: `You've reached level ${score / 5 + 1}!`,
-      });
-    }
-  }, [score, gameState, toast]);
+  const [roundAnnounced, setRoundAnnounced] = useState(false);
   
   // Clean up speech synthesis when component unmounts
   useEffect(() => {
@@ -42,6 +35,15 @@ const GameBoard: React.FC = () => {
       }
     };
   }, []);
+  
+  // Reset round announced flag when game state changes
+  useEffect(() => {
+    if (gameState === 'sequence' && !roundAnnounced) {
+      setRoundAnnounced(true);
+    } else if (gameState !== 'sequence') {
+      setRoundAnnounced(false);
+    }
+  }, [gameState, roundAnnounced]);
   
   // Voice instruction effect
   useEffect(() => {
@@ -54,11 +56,12 @@ const GameBoard: React.FC = () => {
     
     const utterance = new SpeechSynthesisUtterance();
     
-    // Only say "Simon Says" for the first button in the sequence
-    if (sequence.length === 1 && sequence[0] === activeButton) {
+    // Say "Simon says" at the start of a new round
+    if (!roundAnnounced && sequence.length > 0) {
       utterance.text = `Simon says ${activeButton}`;
+      setRoundAnnounced(true);
     } else {
-      utterance.text = `${activeButton}`;
+      utterance.text = activeButton;
     }
     
     utterance.rate = 0.9; // Slightly slower rate for better clarity
@@ -75,7 +78,7 @@ const GameBoard: React.FC = () => {
       clearTimeout(timer);
       // Don't cancel immediately on cleanup to allow speech to complete
     };
-  }, [activeButton, gameState, voiceInstructionsEnabled, sequence]);
+  }, [activeButton, gameState, voiceInstructionsEnabled, sequence, roundAnnounced]);
   
   // Get dynamic background color from theme
   const backgroundColor = getBackgroundColor();
@@ -127,13 +130,15 @@ const GameBoard: React.FC = () => {
         {gameState === 'gameOver' && (
           <div className="mb-8 space-y-4">
             <p className="text-white text-2xl mb-6 font-bold animate-bounce">Game Over!</p>
-            <Button
-              onClick={restartGame}
-              className="px-8 py-3 bg-white text-simon-background rounded-full text-xl font-bold transition-transform hover:scale-105 flex items-center gap-2"
-            >
-              <RotateCcw className="h-5 w-5" />
-              Play Again
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                onClick={restartGame}
+                className="px-8 py-3 bg-white text-simon-background rounded-full text-xl font-bold transition-transform hover:scale-105 flex items-center gap-2"
+              >
+                <RotateCcw className="h-5 w-5" />
+                Play Again
+              </Button>
+            </div>
           </div>
         )}
         
@@ -146,11 +151,7 @@ const GameBoard: React.FC = () => {
         )}
         
         {gameState === 'userInput' && (
-          <div className="flex flex-col items-center">
-            <p className="text-white text-xl mb-2">Your turn!</p>
-            <Timer />
-            <ProgressBar />
-          </div>
+          <p className="text-white text-xl mb-4">Your turn!</p>
         )}
       </div>
       
@@ -160,6 +161,13 @@ const GameBoard: React.FC = () => {
         <GameButton color="green" />
         <GameButton color="yellow" />
       </div>
+      
+      {gameState === 'userInput' && (
+        <div className="fixed bottom-8 left-0 right-0 flex flex-col items-center mt-8">
+          <Timer />
+          <ProgressBar />
+        </div>
+      )}
     </div>
   );
 };
