@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import GameButton from './GameButton';
 import ProgressBar from './ProgressBar';
@@ -18,7 +17,8 @@ const GameBoard: React.FC = () => {
     restartGame,
     getBackgroundColor,
     activeButton,
-    voiceInstructionsEnabled
+    voiceInstructionsEnabled,
+    sequence
   } = useGame();
   
   const { toast } = useToast();
@@ -53,7 +53,14 @@ const GameBoard: React.FC = () => {
     }
     
     const utterance = new SpeechSynthesisUtterance();
-    utterance.text = `Simon says ${activeButton}`;
+    
+    // Only say "Simon Says" for the first button in the sequence
+    if (sequence.length === 1 && sequence[0] === activeButton) {
+      utterance.text = `Simon says ${activeButton}`;
+    } else {
+      utterance.text = `${activeButton}`;
+    }
+    
     utterance.rate = 0.9; // Slightly slower rate for better clarity
     utterance.pitch = 1.0;
     utterance.volume = 1.0; // Maximum volume
@@ -68,7 +75,7 @@ const GameBoard: React.FC = () => {
       clearTimeout(timer);
       // Don't cancel immediately on cleanup to allow speech to complete
     };
-  }, [activeButton, gameState, voiceInstructionsEnabled]);
+  }, [activeButton, gameState, voiceInstructionsEnabled, sequence]);
   
   // Get dynamic background color from theme
   const backgroundColor = getBackgroundColor();
