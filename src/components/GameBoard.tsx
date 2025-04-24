@@ -1,8 +1,8 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import GameButton from './GameButton';
 import Timer from './Timer';
 import SettingsMenu from './SettingsMenu';
-import Avatar from './Avatar';
 import { useGame } from '@/context/GameContext';
 import { Sparkles, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,12 +20,10 @@ const GameBoard: React.FC = () => {
     sequence,
     currentRound,
     currentStep,
-    userSequence,
   } = useGame();
   
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const [simonSaysAnnounced, setSimonSaysAnnounced] = useState(false);
-  const [avatarMood, setAvatarMood] = useState<'neutral' | 'happy' | 'sad'>('neutral');
   
   // Clean up speech synthesis when component unmounts
   useEffect(() => {
@@ -42,27 +40,7 @@ const GameBoard: React.FC = () => {
       setSimonSaysAnnounced(false);
     }
   }, [gameState, currentStep]);
-
-  // Add mood reset effect
-  useEffect(() => {
-    if (avatarMood !== 'neutral') {
-      const timer = setTimeout(() => {
-        setAvatarMood('neutral');
-      }, 1500); // Reset mood after 1.5 seconds
-      
-      return () => clearTimeout(timer);
-    }
-  }, [avatarMood]);
-
-  // Update mood on game state changes
-  useEffect(() => {
-    if (gameState === 'gameOver') {
-      setAvatarMood('sad');
-    } else if (score > 0 && userSequence.length === sequence.length && gameState === 'sequence') {
-      setAvatarMood('happy');
-    }
-  }, [gameState, score, userSequence.length, sequence.length]);
-
+  
   // Voice instruction effect
   useEffect(() => {
     if (!voiceInstructionsEnabled || gameState !== 'sequence') return;
@@ -104,8 +82,6 @@ const GameBoard: React.FC = () => {
   
   return (
     <div className="h-full flex flex-col items-center justify-center" style={{ backgroundColor }}>
-      <Avatar mood={avatarMood} />
-      
       <div className="fixed top-4 right-4 z-10">
         <SettingsMenu />
       </div>
