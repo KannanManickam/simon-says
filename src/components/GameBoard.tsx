@@ -1,8 +1,8 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import GameButton from './GameButton';
 import Timer from './Timer';
 import SettingsMenu from './SettingsMenu';
+import RoundConfetti from './RoundConfetti';
 import { useGame } from '@/context/GameContext';
 import { Sparkles, Trophy, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,8 +22,24 @@ const GameBoard: React.FC = () => {
     currentStep,
   } = useGame();
   
+  const [showConfetti, setShowConfetti] = useState(false);
   const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const [simonSaysAnnounced, setSimonSaysAnnounced] = useState(false);
+
+  // Effect to handle confetti display when round is completed
+  useEffect(() => {
+    if (gameState === 'sequence' && currentStep === 0) {
+      // Show confetti when a new sequence starts (meaning previous round was completed)
+      if (currentRound > 1) {
+        setShowConfetti(true);
+        // Hide confetti after animation
+        const timer = setTimeout(() => {
+          setShowConfetti(false);
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [gameState, currentStep, currentRound]);
   
   // Clean up speech synthesis when component unmounts
   useEffect(() => {
@@ -90,6 +106,8 @@ const GameBoard: React.FC = () => {
   
   return (
     <div className="h-full flex flex-col items-center justify-center" style={{ backgroundColor }}>
+      <RoundConfetti isVisible={showConfetti} />
+      
       <div className="fixed top-4 right-4 z-10">
         <SettingsMenu />
       </div>
