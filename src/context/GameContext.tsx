@@ -153,7 +153,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     return buttons[Math.floor(Math.random() * buttons.length)];
   };
 
-  // Calculate timing parameters based on difficulty
+  // Calculate timing parameters based on difficulty - updated for better sync
   const getSequenceDelay = () => {
     let baseDelay;
     switch (difficulty) {
@@ -162,8 +162,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       default: baseDelay = 600; break; // Medium: Normal
     }
     
-    // Add extra time if voice instructions are enabled
-    return voiceInstructionsEnabled ? baseDelay + 800 : baseDelay;
+    // Add reasonable extra time if voice instructions are enabled
+    return voiceInstructionsEnabled ? baseDelay + 400 : baseDelay;
   };
 
   const getSequenceDisplayTime = () => {
@@ -174,8 +174,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       default: baseTime = 600; break; // Medium: Normal
     }
     
-    // Add extra time if voice instructions are enabled
-    return voiceInstructionsEnabled ? baseTime + 800 : baseTime;
+    // Add reasonable extra time if voice instructions are enabled
+    return voiceInstructionsEnabled ? baseTime + 200 : baseTime;
   };
 
   const getTimeLimit = (seqLength: number) => {
@@ -272,7 +272,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     startGame();
   };
 
-  // Play the sequence for the user to watch
+  // Play the sequence for the user to watch - updated for better timing
   useEffect(() => {
     if (gameState !== 'sequence') return;
 
@@ -283,6 +283,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     const playSequence = () => {
       // Play the current step in the sequence
       setActiveButton(sequence[step]);
+      setCurrentStep(step);
       
       // After a short delay, turn off the button
       setTimeout(() => {
@@ -291,8 +292,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         
         if (step < sequence.length) {
           // Continue to the next step after a gap
-          // Add extra time between steps if voice is enabled
-          const pauseTime = voiceInstructionsEnabled ? sequenceDelay + 200 : sequenceDelay - displayTime;
+          // Using a shorter pause between steps for better flow
+          const pauseTime = voiceInstructionsEnabled ? 300 : sequenceDelay - displayTime;
           setTimeout(playSequence, pauseTime);
         } else {
           // Sequence is complete, user's turn
@@ -305,9 +306,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       }, displayTime);
     };
 
-    // Start playing the sequence after a short delay
-    // Add extra time before starting if voice is enabled
-    const initialDelay = voiceInstructionsEnabled ? 1500 : 1000;
+    // Delay before starting the sequence to allow for "Simon Says" voice instruction
+    // Using shorter initial delay for better UX
+    const initialDelay = voiceInstructionsEnabled ? 700 : 500;
     const timer = setTimeout(playSequence, initialDelay);
     
     return () => clearTimeout(timer);

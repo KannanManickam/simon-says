@@ -34,47 +34,55 @@ const GameBoard: React.FC = () => {
     };
   }, []);
   
-  // Reset simon says announced flag when game state changes
+  // Reset simon says announced flag when starting a new sequence display
   useEffect(() => {
     if (gameState === 'sequence' && currentStep === 0) {
       setSimonSaysAnnounced(false);
     }
   }, [gameState, currentStep]);
   
-  // Voice instruction effect
+  // Voice instruction effect - completely revised to handle sequence properly
   useEffect(() => {
     if (!voiceInstructionsEnabled || gameState !== 'sequence') return;
     
-    // Create a speech synthesis utterance
+    // Cancel any ongoing speech
     if (speechRef.current) {
-      window.speechSynthesis.cancel(); // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
     }
     
+    // Create a speech synthesis utterance
     const utterance = new SpeechSynthesisUtterance();
     
-    // Say "Simon says" at the start of each round, but only once
+    // First announce "Simon Says" at the beginning of sequence display
     if (!simonSaysAnnounced && currentStep === 0) {
       utterance.text = `Simon says`;
       setSimonSaysAnnounced(true);
-    } else if (activeButton) {
-      utterance.text = activeButton;
-    } else {
-      return; // No text to speak
-    }
-    
-    utterance.rate = 0.9; // Slightly slower rate for better clarity
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0; // Maximum volume
-    speechRef.current = utterance;
-    
-    // Add a small delay to ensure the speech synthesis is ready
-    const timer = setTimeout(() => {
+      
+      utterance.rate = 1.1; // Slightly faster rate for better sync with visual
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      speechRef.current = utterance;
+      
+      // Speak immediately
       window.speechSynthesis.speak(utterance);
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-    };
+      
+      // Don't proceed with color announcement yet
+      return;
+    } 
+    // Then announce the current color if active
+    else if (activeButton) {
+      utterance.text = activeButton;
+      
+      utterance.rate = 1.1; // Faster rate for better sync with visual
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      speechRef.current = utterance;
+      
+      // Speak immediately
+      window.speechSynthesis.speak(utterance);
+    }
   }, [activeButton, gameState, voiceInstructionsEnabled, currentStep, simonSaysAnnounced]);
   
   // Get dynamic background color from theme
